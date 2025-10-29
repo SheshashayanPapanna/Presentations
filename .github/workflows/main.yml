@@ -1,0 +1,65 @@
+name: Build Playwright MCP Demo PPTX
+
+on:
+  workflow_dispatch:
+    inputs:
+      template_path:
+        description: Path to the PNG template
+        required: true
+        default: template.png
+      out_name:
+        description: PPTX output filename
+        required: true
+        default: Playwright-MCP-Demo.pptx
+      title:
+        description: Deck title
+        required: true
+        default: Playwright MCP Demo
+      presenter:
+        description: Presenter name
+        required: true
+        default: Sheshashayan Papanna
+      org:
+        description: Team/Org (optional)
+        required: false
+        default: ""
+      date:
+        description: Date to display
+        required: true
+        default: "07/11/2025"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Build PPTX
+        run: |
+          python build_playwright_mcp_demo.py \
+            --template-image "${{ github.event.inputs.template_path }}" \
+            --out "${{ github.event.inputs.out_name }}" \
+            --title "${{ github.event.inputs.title }}" \
+            --presenter "${{ github.event.inputs.presenter }}" \
+            --org "${{ github.event.inputs.org }}" \
+            --date "${{ github.event.inputs.date }}"
+
+      - name: Zip artifact
+        run: |
+          zip Playwright-MCP-Demo.zip "${{ github.event.inputs.out_name }}" "${{ github.event.inputs.template_path }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Playwright-MCP-Demo.zip
+          path: Playwright-MCP-Demo.zip
+          if-no-files-found: error
